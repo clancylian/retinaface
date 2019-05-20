@@ -1,20 +1,6 @@
-﻿ /**
- * @file       trtnetbase.cpp
- * @brief      tensorRT P/R/O三个网络的基类
- * @details    tensorRT P/R/O三个网络的基类
- * @author     clancy.lian@gmail.com
- * @date       2017.12.26
- * @version    V0.1
- * @par Copyright (C):
- *			   罗普特(厦门)科技集团有限公司
- * @par History:
- *  - V0.1     clancy.lian@gmail.com		 2017.12.26 \n
- *             原型开发
- */
-
-
-#include "trtnetbase.h"
+﻿#include "trtnetbase.h"
 #include "trtutility.h"
+#include <assert.h>
 
 using namespace std;
 
@@ -119,7 +105,7 @@ bool TrtNetBase::parseNet(const string& deployfile)
     string line;
     readfile.open(deployfile, ios::in);
     if (!readfile) {
-        dbgError("the deployfile doesn't exist!\n");
+        printf("the deployfile doesn't exist!\n");
         return false;
     }
 
@@ -156,7 +142,7 @@ bool TrtNetBase::parseNet(const string& deployfile)
         break;
     }
 
-    dbgInfo("batchSize:%d, channel:%d, netHeight:%d, netWidth:%d.\n", batchSize, channel, netHeight, netWidth);
+    printf("batchSize:%d, channel:%d, netHeight:%d, netWidth:%d.\n", batchSize, channel, netHeight, netWidth);
 
     readfile.close();
 
@@ -166,7 +152,7 @@ bool TrtNetBase::parseNet(const string& deployfile)
 void TrtNetBase::buildTrtContext(const std::string& deployfile, const std::string& modelfile, bool bUseCPUBuf)
 {
     if (!parseNet(deployfile)) {
-        dbgError("parse net failed, exit!\n");
+        printf("parse net failed, exit!\n");
         exit(0);
     }
     string cacheFile = netWorkName + ".cache";
@@ -176,7 +162,7 @@ void TrtNetBase::buildTrtContext(const std::string& deployfile, const std::strin
         size_t size = 0;
         size_t i = 0;
 
-        dbgInfo("Using cached tensorRT model.\n");
+        printf("Using cached tensorRT model.\n");
 
         // Get the length
         trtModelFile.seekg(0, ios::end);
@@ -199,7 +185,7 @@ void TrtNetBase::buildTrtContext(const std::string& deployfile, const std::strin
         //IPluginFactory pluginFactory;
         caffeToTRTModel(deployfile, modelfile, NULL);
         //pluginFactory.destroyPlugin();
-        dbgInfo("Create tensorRT model cache.\n");
+        printf("Create tensorRT model cache.\n");
         ofstream trtModelFile(cacheFile);
         trtModelFile.write((char *)trtModelStream->data(), trtModelStream->size());
         trtModelFile.close();
@@ -248,7 +234,7 @@ void TrtNetBase::caffeToTRTModel(const std::string& deployFile, const std::strin
 
     for (auto& s : outputs) {
         network->markOutput(*blobNameToTensor->find(s.c_str()));
-        dbgInfo("outputs %s\n", s.c_str());
+        printf("outputs %s\n", s.c_str());
     }
 
     // Build the engine

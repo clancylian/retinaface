@@ -1,17 +1,4 @@
-﻿/**
- * @file       trtretinafacenet.h
- * @brief      tensorRT RetinaFace net 实现
- * @details    tensorRT RetinaFace net 实现
- * @author     clancy.lian@gmail.com
- * @date       2019.05.17
- * @version    V0.1
- * @par Copyright (C):
- *			   罗普特(厦门)科技集团有限公司
- * @par History:
- *  - V0.1     clancy.lian@gmail.com	2019.05.17 \n
- *             原型开发
- */
-#ifndef TRTRETINAFACENET_H
+﻿#ifndef TRTRETINAFACENET_H
 #define TRTRETINAFACENET_H
 
 #include <fstream>
@@ -29,8 +16,9 @@ struct TrtBlob
     string layer_name;
     int layer_index;
     int outputSize;
-    std::vector<float> result;
+    std::vector<std::vector<float>> result;
     DimsCHW outputDims;
+    int batchsize;
 };
 
 class TrtRetinaFaceNet : public TrtNetBase

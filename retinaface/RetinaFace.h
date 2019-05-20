@@ -67,7 +67,7 @@ public:
                float nms = 0.4, bool nocrop = false, float decay4 = 0.5, bool vote = false);
     ~RetinaFace();
 
-
+    void detectBatchImages(vector<cv::Mat> imgs, float threshold=0.5);
     void detect(cv::Mat img, float threshold=0.5, float scales=1.0);
 private:
     vector<anchor_box> bbox_pred(vector<anchor_box> anchors, vector<cv::Vec4f> regress);
@@ -81,7 +81,7 @@ private:
     int width;
     int height;
     int channels;
-    int batchsize;
+    int maxbatchsize;
     void *cpuBuffers;
 
     float pixel_means[3] = {0.0, 0.0, 0.0};

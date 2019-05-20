@@ -1,21 +1,8 @@
-﻿/**
- * @file       trtretinafacenet.h
- * @brief      tensorRT RetinaFace net 实现
- * @details    tensorRT RetinaFace net 实现
- * @author     clancy.lian@gmail.com
- * @date       2019.05.17
- * @version    V0.1
- * @par Copyright (C):
- *			   罗普特(厦门)科技集团有限公司
- * @par History:
- *  - V0.1     clancy.lian@gmail.com	2019.05.17 \n
- *             原型开发
- */
-
-#include "trtretinafacenet.h"
+﻿#include "trtretinafacenet.h"
 #include "trtutility.h"
 #include <map>
 #include <boost/bind/bind.hpp>
+#include <assert.h>
 
 using namespace std;
 
@@ -30,8 +17,8 @@ TrtRetinaFaceNet::TrtRetinaFaceNet(string netWorkName) : TrtNetBase(netWorkName)
 
     inputBuffer = NULL;
 
-    workSpaceSize = 1 << 20;
-    maxBatchSize = 1;
+    workSpaceSize = 1 << 24;
+    maxBatchSize = 16;
 
     outputs = {"face_rpn_cls_prob_reshape_stride32",
                "face_rpn_bbox_pred_stride32",
@@ -98,11 +85,16 @@ void TrtRetinaFaceNet::doInference(int batchSize, float *input)
     }
 
     for(size_t i = 0; i < outputBuffers.size(); i++){
-        const float* confidenceBegin = outputBuffers[i];
-        const float* confidenceEnd = confidenceBegin + (outputsizes[i] / sizeof(float));
-        string key = outputs[i];
-        std::vector<float> ret = std::vector<float>(confidenceBegin, confidenceEnd);
-        results[i].result = ret;
+        int count = outputsizes[i] / (sizeof(float) * maxBatchSize);
+        results[i].result.clear();
+        for(int j = 0; j < batchSize; j++) {
+            const float* confidenceBegin = outputBuffers[i] + j * count;
+            const float* confidenceEnd = confidenceBegin + count;
+            std::vector<float> ret = std::vector<float>(confidenceBegin, confidenceEnd);
+            results[i].result.push_back(ret);
+        }
+
+        results[i].batchsize = batchSize;
     }
 }
 

@@ -6,15 +6,12 @@ CONFIG -= qt
 SOURCES += main.cpp \
     RetinaFace.cpp \
     tensorrt/trtnetbase.cpp \
-    dbg.cpp \
     tensorrt/trtretinafacenet.cpp
 
 HEADERS += \
     RetinaFace.h \
-    timer.h \
     tensorrt/trtnetbase.h \
     tensorrt/trtutility.h \
-    dbg.h \
     tensorrt/trtretinafacenet.h
 
 LIBS += -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_video -lopencv_imgcodecs
@@ -27,7 +24,7 @@ LIBS += -lprotobuf -L/home/ubuntu/caffe-office/caffe/build/lib -lcaffe
 LIBS += -lglog -lboost_system -lssl -lcrypto
 
 INCLUDEPATH += /usr/local/TensorRT/include
-LIBS += -L/usr/local/TensorRT/lib -lnvinfer -lnvcaffe_parser
+LIBS += -L/usr/local/TensorRT/lib -lnvinfer -lnvcaffe_parser\
 
 unix {
     CUDA_DIR = /usr/local/cuda

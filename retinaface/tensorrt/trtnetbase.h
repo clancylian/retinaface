@@ -1,19 +1,4 @@
-﻿ /**
- * @file       trtnetbase.h
- * @brief      tensorRT P/R/O三个网络的基类
- * @details    tensorRT P/R/O三个网络的基类
- * @author     clancy.lian@gmail.com
- * @date       2017.12.26
- * @version    V0.1
- * @par Copyright (C):
- *			   罗普特(厦门)科技集团有限公司
- * @par History:
- *  - V0.1     clancy.lian@gmail.com		 2017.12.26 \n
- *             原型开发
- */
-
-
-#ifndef TRTNETBASE_H
+﻿#ifndef TRTNETBASE_H
 #define TRTNETBASE_H
 
 #include <fstream>
