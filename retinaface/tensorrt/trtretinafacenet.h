@@ -41,6 +41,9 @@ public:
     virtual void doInference(int batchSize, float *input = NULL) override;
 
     TrtBlob *blob_by_name(string layer_name);
+
+    vector<int> getOutputWidth();
+    vector<int> getOutputHeight();
 private:
 
    /**

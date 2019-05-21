@@ -25,8 +25,8 @@ int main()
     int c = 0;
     double t1 = (double)getTickCount();
     while(1) {
-        rf.detect(img, 0.9);
-        //rf.detectBatchImages(imgs, 0.9);
+        //rf.detect(img, 0.9);
+        rf.detectBatchImages(imgs, 0.9);
         c++;
         if(c >= 100) {
             break;

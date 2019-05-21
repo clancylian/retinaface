@@ -18,7 +18,7 @@ TrtRetinaFaceNet::TrtRetinaFaceNet(string netWorkName) : TrtNetBase(netWorkName)
     inputBuffer = NULL;
 
     workSpaceSize = 1 << 24;
-    maxBatchSize = 1;
+    maxBatchSize = 8;
 
     outputs = {"face_rpn_cls_prob_reshape_stride32",
                "face_rpn_bbox_pred_stride32",
@@ -109,6 +109,34 @@ TrtBlob* TrtRetinaFaceNet::blob_by_name(string layer_name)
     }
 
     return &(*it);
+}
+
+vector<int> TrtRetinaFaceNet::getOutputWidth()
+{
+    if(outputDims.size() == 0) {
+        return vector<int>();
+    }
+
+    vector<int> out;
+    out.push_back(outputDims[0].w());
+    out.push_back(outputDims[3].w());
+    out.push_back(outputDims[6].w());
+
+    return out;
+}
+
+vector<int> TrtRetinaFaceNet::getOutputHeight()
+{
+    if(outputDims.size() == 0) {
+        return vector<int>();
+    }
+
+    vector<int> out;
+    out.push_back(outputDims[0].h());
+    out.push_back(outputDims[3].h());
+    out.push_back(outputDims[6].h());
+
+    return out;
 }
 
 void TrtRetinaFaceNet::allocateMemory(bool bUseCPUBuf)

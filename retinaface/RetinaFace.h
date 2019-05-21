@@ -70,18 +70,17 @@ public:
     void detectBatchImages(vector<cv::Mat> imgs, float threshold=0.5);
     void detect(cv::Mat img, float threshold=0.5, float scales=1.0);
 private:
+    vector<FaceDetectInfo> postProcess(int inputW, int inputH, float threshold);
+    anchor_box bbox_pred(anchor_box anchor, cv::Vec4f regress);
     vector<anchor_box> bbox_pred(vector<anchor_box> anchors, vector<cv::Vec4f> regress);
     vector<FacePts> landmark_pred(vector<anchor_box> anchors, vector<FacePts> facePts);
+    FacePts landmark_pred(anchor_box anchor, FacePts facePt);
     static bool CompareBBox(const FaceDetectInfo &a, const FaceDetectInfo &b);
     std::vector<FaceDetectInfo> nms(std::vector<FaceDetectInfo> &bboxes, float threshold);
 private:
     boost::shared_ptr<Net<float> > Net_;
     
     TrtRetinaFaceNet *trtNet;
-    int width;
-    int height;
-    int channels;
-    int maxbatchsize;
     float *cpuBuffers;
 
     float pixel_means[3] = {0.0, 0.0, 0.0};
@@ -103,9 +102,11 @@ private:
     map<int, anchor_cfg> cfg;
 
     map<string, vector<anchor_box>> _anchors_fpn;
+    map<string, vector<anchor_box>> _anchors;
     map<string, int> _num_anchors;
 
     bool use_landmarks;
+
 };
 
 #endif // RETINAFACE_H
