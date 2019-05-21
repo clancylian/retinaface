@@ -18,7 +18,7 @@ TrtRetinaFaceNet::TrtRetinaFaceNet(string netWorkName) : TrtNetBase(netWorkName)
     inputBuffer = NULL;
 
     workSpaceSize = 1 << 24;
-    maxBatchSize = 16;
+    maxBatchSize = 1;
 
     outputs = {"face_rpn_cls_prob_reshape_stride32",
                "face_rpn_bbox_pred_stride32",
@@ -60,12 +60,12 @@ void TrtRetinaFaceNet::doInference(int batchSize, float *input)
         context->enqueue(batchSize, buffers, stream, nullptr);
 
         for(size_t i = 0; i < outputDims.size(); i++){
-            CHECK(cudaMemcpyAsync(outputBuffers[i], buffers[outputIndexs[i]], outputsizes[i],
+            CHECK(cudaMemcpyAsync(outputBuffers[i], buffers[outputIndexs[i]],
+                  batchSize * outputsizes[i] / maxBatchSize,
                   cudaMemcpyDeviceToHost, stream));
         }
 
         cudaStreamSynchronize(stream);
-
         // release the stream and the buffers
         cudaStreamDestroy(stream);
     }
@@ -84,6 +84,7 @@ void TrtRetinaFaceNet::doInference(int batchSize, float *input)
         }
     }
 
+    //output to vector
     for(size_t i = 0; i < outputBuffers.size(); i++){
         int count = outputsizes[i] / (sizeof(float) * maxBatchSize);
         results[i].result.clear();

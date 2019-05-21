@@ -82,7 +82,7 @@ private:
     int height;
     int channels;
     int maxbatchsize;
-    void *cpuBuffers;
+    float *cpuBuffers;
 
     float pixel_means[3] = {0.0, 0.0, 0.0};
     float pixel_stds[3] = {1.0, 1.0, 1.0};

@@ -255,7 +255,6 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
         std::cout << "please reconfig anchor_cfg" << network << std::endl;
     }
 
-
     bool dense_anchor = false;
     vector<vector<anchor_box>> anchors = generate_anchors_fpn(dense_anchor, cfg);
     int sz = _feat_stride_fpn.size();
@@ -266,12 +265,6 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
     }
 
     //加载网络
-#ifndef CPU_ONLY
-    Caffe::set_mode(Caffe::CPU);
-#else
-    Caffe::set_mode(Caffe::GPU);
-#endif
-
 #ifdef TRT
     trtNet = new TrtRetinaFaceNet("retina");
     trtNet->buildTrtContext(model + "/mnet-deconv-0517.prototxt", model+"/mnet-deconv-0517.caffemodel");
@@ -282,8 +275,16 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
     height = trtNet->getNetHeight();
     //
     int inputsize = maxbatchsize * channels * width * height * sizeof(float);
-    cpuBuffers = new char[inputsize];
+    cpuBuffers = (float*)malloc(inputsize);
+    memset(cpuBuffers, 0, inputsize);
 #else
+
+#ifdef CPU_ONLY
+    Caffe::set_mode(Caffe::CPU);
+#else
+    Caffe::set_mode(Caffe::GPU);
+#endif
+
     /* Load the network. */
     Net_.reset(new Net<float>((model + "/mnet25d.prototxt"), TEST));
     Net_->CopyTrainedLayersFrom(model+"/mnet25d.caffemodel");
@@ -292,7 +293,11 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
 
 RetinaFace::~RetinaFace()
 {
-    delete []cpuBuffers;
+#ifdef TRT
+    delete trtNet;
+
+    free(cpuBuffers);
+#endif
 }
 
 vector<anchor_box> RetinaFace::bbox_pred(vector<anchor_box> anchors, vector<cv::Vec4f> regress)
@@ -405,13 +410,13 @@ std::vector<FaceDetectInfo> RetinaFace::nms(std::vector<FaceDetectInfo>& bboxes,
 }
 
 #ifdef TRT
-double all = 0;
-int allc = 100;
 void RetinaFace::detect(Mat img, float threshold, float scales)
 {
     if(img.empty()) {
         return;
     }
+
+    double pre = (double)getTickCount();
 
     int inputW = trtNet->getNetWidth();
     int inputH = trtNet->getNetHeight();
@@ -459,17 +464,21 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     float *inputData = (float*)trtNet->getBuffer(0);
     cudaMemcpy(inputData, cpuBuffers, inputW * inputH * 3 * sizeof(float), cudaMemcpyHostToDevice);
 
+    pre = (double)getTickCount() - pre;
+    std::cout << "pre compute time :" << pre*1000.0 / cv::getTickFrequency() << " ms \n";
+
     //LOG(INFO) << "Start net_->Forward()";
     double t1 = (double)getTickCount();
     trtNet->doInference(1);
     t1 = (double)getTickCount() - t1;
-    all += t1;
-    std::cout << "doInference compute time :" << all*1000.0 / cv::getTickFrequency() << " ms \n";
+    std::cout << "doInference compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
     //LOG(INFO) << "Done net_->Forward()";
 
     string name_bbox = "face_rpn_bbox_pred_";
     string name_score ="face_rpn_cls_prob_reshape_";
     string name_landmark ="face_rpn_landmark_pred_";
+
+    double post = (double)getTickCount();
 
     vector<FaceDetectInfo> faceInfo;
     for(size_t i = 0; i < _feat_stride_fpn.size(); i++) {
@@ -564,6 +573,9 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     //排序nms
     faceInfo = nms(faceInfo, 0.4);
 
+    post = (double)getTickCount() - post;
+    std::cout << "post compute time :" << post*1000.0 / cv::getTickFrequency() << " ms \n";
+
 //    for(size_t i = 0; i < faceInfo.size(); i++) {
 //        cv::Rect rect = cv::Rect(cv::Point2f(faceInfo[i].rect.x1, faceInfo[i].rect.y1),
 //                                 cv::Point2f(faceInfo[i].rect.x2, faceInfo[i].rect.y2));
@@ -643,8 +655,7 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
     double t1 = (double)getTickCount();
     trtNet->doInference(imgs.size());
     t1 = (double)getTickCount() - t1;
-    all += t1;
-    std::cout << "doInference compute time :" << all*1000.0 / cv::getTickFrequency() << " ms \n";
+    std::cout << "doInference compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
     //LOG(INFO) << "Done net_->Forward()";
 
     string name_bbox = "face_rpn_bbox_pred_";
@@ -697,7 +708,8 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
         for(size_t batch = 0; batch < imgs.size(); batch++) {
             std::vector<float> bbox_delta = bbox_blob->result[batch];
 
-            vector<cv::Vec4f> regress;
+            vector<cv::Vec4f> regress(count * num_anchor);
+            int idx = 0;
             for(size_t j = 0; j < count; j++) {
                 for(size_t num = 0; num < num_anchor; num++) {
                     cv::Vec4f tmp;
@@ -706,7 +718,8 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
                     float dw = bbox_delta[j + count * (2 + num * 4)];
                     float dh = bbox_delta[j + count * (3 + num * 4)];
                     tmp = cv::Vec4f(dx, dy, dw, dh);
-                    regress.push_back(tmp);
+                    //regress.push_back(tmp);
+                    regress[idx++] = tmp;
                 }
             }
 
@@ -726,7 +739,8 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
         for(size_t batch = 0; batch < imgs.size(); batch++) {
             std::vector<float> landmark_delta = landmark_blob->result[batch];
 
-            vector<FacePts> facePts;
+            vector<FacePts> facePts(count * num_anchor);
+            int idx = 0;
             for(size_t j = 0; j < count; j++) {
                 for(size_t num = 0; num < num_anchor; num++) {
                     FacePts pts;
@@ -734,13 +748,13 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
                         pts.x[k] = landmark_delta[j + count * (num * 10 + k * 2)];
                         pts.y[k] = landmark_delta[j + count * (num * 10 + k * 2 + 1)];
                     }
-                    facePts.push_back(pts);
+                    //facePts.push_back(pts);
+                    facePts[idx++] = pts;
                 }
             }
 
             //回归人脸关键点
             vector<FacePts> pts = landmark_pred(anchors, facePts);
-
             landmarks.push_back(pts);
         }
 
@@ -766,24 +780,24 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
         faceInfos[batch] = nms(faceInfos[batch], 0.4);
     }
 
-    for(size_t batch = 0; batch < imgs.size(); batch++){
-        for(size_t i = 0; i < faceInfos[batch].size(); i++) {
-            cv::Rect rect = cv::Rect(cv::Point2f(faceInfos[batch][i].rect.x1, faceInfos[batch][i].rect.y1),
-                                     cv::Point2f(faceInfos[batch][i].rect.x2, faceInfos[batch][i].rect.y2));
-            cv::rectangle(src[batch], rect, Scalar(0, 0, 255), 2);
+//    for(size_t batch = 0; batch < imgs.size(); batch++){
+//        for(size_t i = 0; i < faceInfos[batch].size(); i++) {
+//            cv::Rect rect = cv::Rect(cv::Point2f(faceInfos[batch][i].rect.x1, faceInfos[batch][i].rect.y1),
+//                                     cv::Point2f(faceInfos[batch][i].rect.x2, faceInfos[batch][i].rect.y2));
+//            cv::rectangle(src[batch], rect, Scalar(0, 0, 255), 2);
 
-            for(size_t j = 0; j < 5; j++) {
-                cv::Point2f pt = cv::Point2f(faceInfos[batch][i].pts.x[j], faceInfos[batch][i].pts.y[j]);
-                cv::circle(src[batch], pt, 1, Scalar(0, 255, 0), 2);
-            }
-        }
+//            for(size_t j = 0; j < 5; j++) {
+//                cv::Point2f pt = cv::Point2f(faceInfos[batch][i].pts.x[j], faceInfos[batch][i].pts.y[j]);
+//                cv::circle(src[batch], pt, 1, Scalar(0, 255, 0), 2);
+//            }
+//        }
 
-        string win = "dst" + std::to_string(batch);
-        imshow(win, src[batch]);
-    }
+//        string win = "dst" + std::to_string(batch);
+//        imshow(win, src[batch]);
+//    }
 
-    //imwrite("trt_result.jpg", src);
-    waitKey(0);
+//    //imwrite("trt_result.jpg", src);
+//    waitKey(0);
 }
 
 #else
@@ -793,6 +807,7 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
         return;
     }
 
+    double pre = (double)getTickCount();
     int ws = (img.cols + 31) / 32 * 32;
     int hs = (img.rows + 31) / 32 * 32;
 
@@ -826,17 +841,21 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     * objects in input_channels. */
     split(img, input_channels);
 
+    pre = (double)getTickCount() - pre;
+    std::cout << "pre compute time :" << pre*1000.0 / cv::getTickFrequency() << " ms \n";
+
     //LOG(INFO) << "Start net_->Forward()";
     double t1 = (double)getTickCount();
     Net_->Forward();
     t1 = (double)getTickCount() - t1;
-    std::cout << "compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
+    std::cout << "infer compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
     //LOG(INFO) << "Done net_->Forward()";
 
     string name_bbox = "face_rpn_bbox_pred_";
     string name_score ="face_rpn_cls_prob_reshape_";
     string name_landmark ="face_rpn_landmark_pred_";
 
+    double post = (double)getTickCount();
     vector<FaceDetectInfo> faceInfo;
     for(size_t i = 0; i < _feat_stride_fpn.size(); i++) {
         string key = "stride" + std::to_string(_feat_stride_fpn[i]);
@@ -929,6 +948,8 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     //排序nms
     faceInfo = nms(faceInfo, 0.4);
 
+    post = (double)getTickCount() - post;
+    std::cout << "post compute time :" << post*1000.0 / cv::getTickFrequency() << " ms \n";
 //    for(size_t i = 0; i < faceInfo.size(); i++) {
 //        cv::Rect rect = cv::Rect(cv::Point2f(faceInfo[i].rect.x1, faceInfo[i].rect.y1), cv::Point2f(faceInfo[i].rect.x2, faceInfo[i].rect.y2));
 //        cv::rectangle(src, rect, Scalar(0, 0, 255), 2);
