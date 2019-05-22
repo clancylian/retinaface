@@ -10,7 +10,7 @@ using namespace nvinfer1;
 {														\
     if (status != 0)									\
     {													\
-        printf("Cuda failure: %s.\n", status); 		\
+        printf("Cuda failure: %d.\n", status); 		\
         abort();										\
     }													\
 }

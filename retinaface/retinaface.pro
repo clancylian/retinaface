@@ -21,7 +21,7 @@ INCLUDEPATH += /home/ubuntu/caffe-office/caffe/include
 LIBS += -lprotobuf -L/home/ubuntu/caffe-office/caffe/build/lib -lcaffe
 
 # 3rd party
-LIBS += -lglog -lboost_system -lssl -lcrypto
+LIBS += -lglog -lboost_system
 
 INCLUDEPATH += /usr/local/TensorRT/include
 LIBS += -L/usr/local/TensorRT/lib -lnvinfer -lnvcaffe_parser\

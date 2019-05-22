@@ -1,7 +1,5 @@
 #include "RetinaFace.h"
 
-#define TRT
-
 //processing
 anchor_win  _whctrs(anchor_box anchor)
 {
@@ -77,7 +75,6 @@ vector<anchor_box> generate_anchors(int base_size = 16, vector<float> ratios = {
     base_anchor.y2 = base_size - 1;
 
     vector<anchor_box> ratio_anchors;
-
     ratio_anchors = _ratio_enum(base_anchor, ratios);
 
     vector<anchor_box> anchors;
@@ -271,7 +268,7 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
     }
 
     //加载网络
-#ifdef TRT
+#ifdef USE_TENSORRT
     trtNet = new TrtRetinaFaceNet("retina");
     trtNet->buildTrtContext(model + "/mnet-deconv-0517.prototxt", model + "/mnet-deconv-0517.caffemodel");
 
@@ -320,7 +317,7 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
 
 RetinaFace::~RetinaFace()
 {
-#ifdef TRT
+#ifdef USE_TENSORRT
     delete trtNet;
     free(cpuBuffers);
 #endif
@@ -473,7 +470,7 @@ std::vector<FaceDetectInfo> RetinaFace::nms(std::vector<FaceDetectInfo>& bboxes,
     return bboxes_nms;
 }
 
-#ifdef TRT
+#ifdef USE_TENSORRT
 vector<FaceDetectInfo> RetinaFace::postProcess(int inputW, int inputH, float threshold)
 {
     string name_bbox = "face_rpn_bbox_pred_";
@@ -486,7 +483,6 @@ vector<FaceDetectInfo> RetinaFace::postProcess(int inputW, int inputH, float thr
         double s1 = (double)getTickCount();
 ///////////////////////////////////////////////
         string key = "stride" + std::to_string(_feat_stride_fpn[i]);
-        int stride = _feat_stride_fpn[i];
 
         string str = name_score + key;
         TrtBlob* score_blob = trtNet->blob_by_name(str);
@@ -740,9 +736,7 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
         //rgb
         cvtColor(imgs[i], imgs[i], CV_BGR2RGB);
     }
-    t2 = (double)getTickCount() - t2;
-    std::cout << "pre process compute time :" << t2*1000.0 / cv::getTickFrequency() << " ms \n";
-    
+
     //填充数据
     vector<vector<Mat>> input_channels;
     float* input_data = (float *)cpuBuffers;
@@ -765,6 +759,9 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
     
     float *inputData = (float*)trtNet->getBuffer(0);
     cudaMemcpy(inputData, cpuBuffers, imgs.size() * inputW * inputH * 3 * sizeof(float), cudaMemcpyHostToDevice);
+
+    t2 = (double)getTickCount() - t2;
+    std::cout << "pre process compute time :" << t2*1000.0 / cv::getTickFrequency() << " ms \n";
 
     //LOG(INFO) << "Start net_->Forward()";
     double t1 = (double)getTickCount();
