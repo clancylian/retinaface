@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.2)
 
 #编译宏的设定，可通过如下方式进行开关的控制，示例：
-#$cmake ../ -DUSE_CAFFE_CPU_ONLY=ON -DUSE_DEBUG=ON
+#$cmake ../ -=USE_TENSORRT=ON -DUSE_DEBUG=ON
 #编译宏开关初期化
 option (USE_ARM64           "Set switch to build at ARM 64 platform mode"   OFF)
 option (USE_DEBUG           "Set switch to build at Debug mode"             OFF)
 option (USE_CAFFE           "Set switch to build at USE_CAFFE mode"         OFF)
 option (USE_TENSORRT        "Set switch to build at USE_TENSORRT mode"      ON)
+option (USE_NPP             "Set switch to build at USE_NPP mode"           ON)
 
 if(USE_ARM64)
     SET(CMAKE_SYSTEM_NAME Linux)
@@ -72,6 +73,11 @@ elseif(USE_CAFFE)
     MESSAGE (STATUS "Build Option: -DUSE_CAFFE")
 endif()
 
+if(USE_NPP)
+    add_definitions(-DUSE_NPP)
+    MESSAGE(STATUS "Build Option: -DUSE_NPP")
+endif()
+
 ###############
 #添加头文件
 ###############
@@ -93,9 +99,13 @@ AUX_SOURCE_DIRECTORY(./retinaface DIR_SRCS)
 ###############
 #生成demo
 ###############
+
 if(USE_TENSORRT)
+    if(USE_NPP)
+        file( GLOB  core_cuda_files  "./retinaface/*.cu")
+    endif()
     AUX_SOURCE_DIRECTORY(./retinaface/tensorrt DIR_SRCS_CUDA)
-    add_executable(retinaface ${DIR_SRCS} ${DIR_SRCS_CUDA})
+    cuda_add_executable(retinaface ${DIR_SRCS} ${DIR_SRCS_CUDA} ${core_cuda_files})
 else()
     add_executable(retinaface ${DIR_SRCS})
 endif()

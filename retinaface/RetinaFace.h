@@ -63,8 +63,7 @@ public:
 class RetinaFace
 {
 public:
-    RetinaFace(string &model, int ctx_id = 0, string network = "net3",
-               float nms = 0.4, bool nocrop = false, float decay4 = 0.5, bool vote = false);
+    RetinaFace(string &model, string network = "net3", float nms = 0.4);
     ~RetinaFace();
 
     void detectBatchImages(vector<cv::Mat> imgs, float threshold=0.5);
@@ -105,6 +104,19 @@ private:
     //每一层fpn有几种形状的anchor
     //也就是ratio个数乘以scales个数
     map<string, int> _num_anchors;
+
+#ifdef USE_NPP
+    typedef struct GPUImg {
+    void *data;
+    int width;
+    int height;
+    int channel;
+    } GPUImg;
+
+    GPUImg _gpu_data8u;
+    GPUImg _resize_gpu_data8u;
+    GPUImg _resize_gpu_data32f;
+#endif
 };
 
 #endif // RETINAFACE_H

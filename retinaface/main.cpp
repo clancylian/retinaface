@@ -5,18 +5,17 @@ using namespace std;
 
 int main()
 {
-    int gpuid = 0;
     string path = "../model";
-    RetinaFace rf(path, gpuid, "net3");
+    RetinaFace rf(path, "net3");
 
     cv::Mat img = cv::imread("/home/ubuntu/Pictures/1.jpg");
     
     vector<Mat> imgs;
-    for(int i = 0; i < 32; i++) {
+    for(int i = 0; i < 8; i++) {
         string prefix = "/home/ubuntu/Project/faceengine/faceengine/test/FaceEngineTest/images/gakki/";
         string imgname = prefix + std::to_string(2005 + i) + ".jpg";
         cv::Mat src = cv::imread(imgname);
-        imgs.push_back(img);
+        imgs.push_back(img.clone());
     }
 
     //rf.detect(img, 0.9);
@@ -25,8 +24,8 @@ int main()
     int c = 0;
     double t1 = (double)getTickCount();
     while(1) {
-        rf.detect(img, 0.9);
-        //rf.detectBatchImages(imgs, 0.9);
+        //rf.detect(img, 0.9);
+        rf.detectBatchImages(imgs, 0.9);
         c++;
         if(c >= 1000) {
             break;

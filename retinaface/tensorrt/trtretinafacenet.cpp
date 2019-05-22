@@ -18,7 +18,7 @@ TrtRetinaFaceNet::TrtRetinaFaceNet(string netWorkName) : TrtNetBase(netWorkName)
     inputBuffer = NULL;
 
     workSpaceSize = 1 << 24;
-    maxBatchSize = 1;
+    maxBatchSize = 8;
 
     outputs = {"face_rpn_cls_prob_reshape_stride32",
                "face_rpn_bbox_pred_stride32",
