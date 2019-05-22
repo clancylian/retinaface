@@ -59,7 +59,9 @@ void TrtRetinaFaceNet::doInference(int batchSize, float *input)
 
         context->enqueue(batchSize, buffers, stream, nullptr);
 
+        //异步拷贝是否需要pinned memory?
         for(size_t i = 0; i < outputDims.size(); i++){
+            //只拷贝batch大小，因为开辟空间是maxBatchSize，如果batch < maxbatch,则拷贝浪费时间
             CHECK(cudaMemcpyAsync(outputBuffers[i], buffers[outputIndexs[i]],
                   batchSize * outputsizes[i] / maxBatchSize,
                   cudaMemcpyDeviceToHost, stream));
@@ -113,6 +115,7 @@ TrtBlob* TrtRetinaFaceNet::blob_by_name(string layer_name)
 
 vector<int> TrtRetinaFaceNet::getOutputWidth()
 {
+    //返回每个fpn输出宽
     if(outputDims.size() == 0) {
         return vector<int>();
     }
@@ -127,6 +130,7 @@ vector<int> TrtRetinaFaceNet::getOutputWidth()
 
 vector<int> TrtRetinaFaceNet::getOutputHeight()
 {
+    //返回每个fpn输出高
     if(outputDims.size() == 0) {
         return vector<int>();
     }

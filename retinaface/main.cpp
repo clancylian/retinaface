@@ -16,7 +16,7 @@ int main()
         string prefix = "/home/ubuntu/Project/faceengine/faceengine/test/FaceEngineTest/images/gakki/";
         string imgname = prefix + std::to_string(2005 + i) + ".jpg";
         cv::Mat src = cv::imread(imgname);
-        imgs.push_back(img);
+        imgs.push_back(src);
     }
 
     //rf.detect(img, 0.9);

@@ -101,20 +101,19 @@ vector<anchor_box> generate_anchors(int base_size = 16, vector<float> ratios = {
     return anchors;
 }
 
-vector<vector<anchor_box>> generate_anchors_fpn(bool dense_anchor = false, map<int, anchor_cfg> cfg = {})
+vector<vector<anchor_box>> generate_anchors_fpn(bool dense_anchor = false, vector<anchor_cfg> cfg = {})
 {
     //Generate anchor (reference) windows by enumerating aspect ratios X
     //scales wrt a reference (0, 0, 15, 15) window.
 
     vector<vector<anchor_box>> anchors;
-    map<int, anchor_cfg>::iterator cfg_iter = cfg.begin();
-    for(;cfg_iter != cfg.end(); cfg_iter++) {
-        //stride从小到大[8 16 32]
-        anchor_cfg tmp = cfg_iter->second;
+    for(size_t i = 0; i < cfg.size(); i++) {
+        //stride从小到大[32 16 8]
+        anchor_cfg tmp = cfg[i];
         int bs = tmp.BASE_SIZE;
         vector<float> ratios = tmp.RATIOS;
         vector<int> scales = tmp.SCALES;
-        int stride = cfg_iter->first;
+        int stride = tmp.STRIDE;
 
         vector<anchor_box> r = generate_anchors(bs, ratios, scales, stride, dense_anchor);
         anchors.push_back(r);
@@ -206,17 +205,13 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
     : ctx_id(ctx_id), network(network), decay4(decay4), nms_threshold(nms),
       vote(vote), nocrop(nocrop)
 {
-    preprocess = false;
-    use_landmarks = true;
     //主干网络选择
-    //_ratio = (1.,)
     int fmc = 3;
 
     if (network=="ssh" || network=="vgg") {
         pixel_means[0] = 103.939;
         pixel_means[1] = 116.779;
         pixel_means[2] = 123.68;
-        preprocess = true;
     }
     else if(network == "net3") {
         _ratio = {1.0};
@@ -249,25 +244,27 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
     //anchor配置
     if(fmc == 3) {
         _feat_stride_fpn = {32, 16, 8};
-
         anchor_cfg tmp;
         tmp.SCALES = {32, 16};
         tmp.BASE_SIZE = 16;
         tmp.RATIOS = _ratio;
         tmp.ALLOWED_BORDER = 9999;
-        cfg[32] = tmp;
+        tmp.STRIDE = 32;
+        cfg.push_back(tmp);
 
         tmp.SCALES = {8, 4};
         tmp.BASE_SIZE = 16;
         tmp.RATIOS = _ratio;
         tmp.ALLOWED_BORDER = 9999;
-        cfg[16] = tmp;
+        tmp.STRIDE = 16;
+        cfg.push_back(tmp);
 
         tmp.SCALES = {2, 1};
         tmp.BASE_SIZE = 16;
         tmp.RATIOS = _ratio;
         tmp.ALLOWED_BORDER = 9999;
-        cfg[8] = tmp;
+        tmp.STRIDE = 8;
+        cfg.push_back(tmp);
     }
     else {
         std::cout << "please reconfig anchor_cfg" << network << std::endl;
@@ -276,7 +273,7 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
     //加载网络
 #ifdef TRT
     trtNet = new TrtRetinaFaceNet("retina");
-    trtNet->buildTrtContext(model + "/mnet-deconv-0517.prototxt", model+"/mnet-deconv-0517.caffemodel");
+    trtNet->buildTrtContext(model + "/mnet-deconv-0517.prototxt", model + "/mnet-deconv-0517.caffemodel");
 
     int maxbatchsize = trtNet->getMaxBatchSize();
     int channels = trtNet->getChannel();
@@ -292,14 +289,13 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
 
     bool dense_anchor = false;
     vector<vector<anchor_box>> anchors_fpn = generate_anchors_fpn(dense_anchor, cfg);
-    int sz = _feat_stride_fpn.size();
     for(size_t i = 0; i < anchors_fpn.size(); i++) {
-        int stride = _feat_stride_fpn[sz-i-1];
-        string key = "stride" + std::to_string(_feat_stride_fpn[sz-i-1]);
+        int stride = _feat_stride_fpn[i];
+        string key = "stride" + std::to_string(_feat_stride_fpn[i]);
         _anchors_fpn[key] = anchors_fpn[i];
         _num_anchors[key] = anchors_fpn[i].size();
         //有三组不同输出宽高
-        _anchors[key] = anchors_plane(outputH[sz-i-1], outputW[sz-i-1], stride, _anchors_fpn[key]);
+        _anchors[key] = anchors_plane(outputH[i], outputW[i], stride, _anchors_fpn[key]);
     }
 #else
 
@@ -308,16 +304,14 @@ RetinaFace::RetinaFace(string &model, int ctx_id, string network,
 #else
     Caffe::set_mode(Caffe::GPU);
 #endif
-
     /* Load the network. */
     Net_.reset(new Net<float>((model + "/mnet-deconv-0517.prototxt"), TEST));
     Net_->CopyTrainedLayersFrom(model+"/mnet-deconv-0517.caffemodel");
 
     bool dense_anchor = false;
     vector<vector<anchor_box>> anchors_fpn = generate_anchors_fpn(dense_anchor, cfg);
-    int sz = _feat_stride_fpn.size();
     for(size_t i = 0; i < anchors_fpn.size(); i++) {
-        string key = "stride" + std::to_string(_feat_stride_fpn[sz-i-1]);
+        string key = "stride" + std::to_string(_feat_stride_fpn[i]);
         _anchors_fpn[key] = anchors_fpn[i];
         _num_anchors[key] = anchors_fpn[i].size();
     }
@@ -328,7 +322,6 @@ RetinaFace::~RetinaFace()
 {
 #ifdef TRT
     delete trtNet;
-
     free(cpuBuffers);
 #endif
 }

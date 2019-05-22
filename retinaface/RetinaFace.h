@@ -44,7 +44,7 @@ struct FaceDetectInfo
 struct anchor_cfg
 {
 public:
-    //int STRIDE;
+    int STRIDE;
     vector<int> SCALES;
     int BASE_SIZE;
     vector<float> RATIOS;
@@ -52,7 +52,7 @@ public:
 
     anchor_cfg()
     {
-        //STRIDE = 0;
+        STRIDE = 0;
         SCALES.clear();
         BASE_SIZE = 0;
         RATIOS.clear();
@@ -93,20 +93,18 @@ private:
     float nms_threshold;
     bool vote;
     bool nocrop;
-    bool debug;
 
-    bool preprocess;
     vector<float> _ratio;
+    vector<anchor_cfg> cfg;
 
     vector<int> _feat_stride_fpn;
-    map<int, anchor_cfg> cfg;
-
+    //每一层fpn的anchor形状
     map<string, vector<anchor_box>> _anchors_fpn;
+    //每一层所有点的anchor
     map<string, vector<anchor_box>> _anchors;
+    //每一层fpn有几种形状的anchor
+    //也就是ratio个数乘以scales个数
     map<string, int> _num_anchors;
-
-    bool use_landmarks;
-
 };
 
 #endif // RETINAFACE_H
