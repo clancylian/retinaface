@@ -275,6 +275,9 @@ RetinaFace::RetinaFace(string &model, string network, float nms)
     trtNet = new TrtRetinaFaceNet("retina");
     trtNet->buildTrtContext(model + "/mnet-deconv-0517.prototxt", model + "/mnet-deconv-0517.caffemodel");
 
+    TrtRetinaFaceNet *acfc = new TrtRetinaFaceNet("retinaww");
+    acfc->buildTrtContext(model + "/mnet-deconv-0517.prototxt", model + "/mnet-deconv-0517.caffemodel");
+
     int maxbatchsize = trtNet->getMaxBatchSize();
     int channels = trtNet->getChannel();
     int inputW = trtNet->getNetWidth();
@@ -306,7 +309,7 @@ RetinaFace::RetinaFace(string &model, string network, float nms)
 #endif
     /* Load the network. */
     Net_.reset(new Net<float>((model + "/mnet-deconv-0517.prototxt"), TEST));
-    Net_->CopyTrainedLayersFrom(model+"/mnet-deconv-0517.caffemodel");
+    Net_->CopyTrainedLayersFrom((model + "/mnet-deconv-0517.caffemodel"));
 
     bool dense_anchor = false;
     vector<vector<anchor_box>> anchors_fpn = generate_anchors_fpn(dense_anchor, cfg);
@@ -570,13 +573,13 @@ vector<FaceDetectInfo> RetinaFace::postProcess(int inputW, int inputH, float thr
     return faceInfo;
 }
 
-void RetinaFace::detect(Mat img, float threshold, float scales)
+void RetinaFace::detect(const Mat &img, float threshold, float scales)
 {
     if(img.empty()) {
         return;
     }
 
-    double pre = (double)getTickCount();
+    //double pre = (double)getTickCount();
 
     int inputW = trtNet->getNetWidth();
     int inputH = trtNet->getNetHeight();
@@ -591,7 +594,8 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     cudaMemcpy(_gpu_data8u.data, img.data, img.cols * img.rows * 3, cudaMemcpyHostToDevice);
     _gpu_data8u.width = img.cols;
     _gpu_data8u.height = img.rows;
-
+    //注：输入图片大小不一样，使用统一buffer会引入脏数据，所以每次置０
+    cudaMemset(_resize_gpu_data8u.data, 0, inputW * inputH * 3);
     cv::Rect roi = cv::Rect(0, 0, _gpu_data8u.width, _gpu_data8u.height);
     imageROIResize8U3C(_gpu_data8u.data, _gpu_data8u.width, _gpu_data8u.height,
                         roi, _resize_gpu_data8u.data, inputW, inputH);
@@ -603,29 +607,30 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     float *inputData = (float*)trtNet->getBuffer(0);
     imageSplit(_resize_gpu_data32f.data, inputData, inputW, inputH, NULL);
 #else
-    if(sw > 1.0 || sh > 1.0) {
+    cv::Mat resize;
+    if(scale > 1) {
         if(sw > sh) {
-            cv::resize(img, img, cv::Size(), 1 /sw, 1 / sw);
-            cv::copyMakeBorder(img, img, 0, inputH - img.rows, 0, 0, cv::BORDER_CONSTANT,cv::Scalar(0));
+            cv::resize(img, resize, cv::Size(), 1 / scale, 1 / scale);
+            cv::copyMakeBorder(resize, resize, 0, inputH - resize.rows, 0, 0, cv::BORDER_CONSTANT,cv::Scalar(0));
         }
         else {
-            cv::resize(img, img, cv::Size(), 1 /sh, 1 / sh);
-            cv::copyMakeBorder(img, img, 0, 0, 0, inputW - img.cols, cv::BORDER_CONSTANT,cv::Scalar(0));
+            cv::resize(img, resize, cv::Size(), 1 / scale, 1 / scale);
+            cv::copyMakeBorder(resize, resize, 0, 0, 0, inputW - resize.cols, cv::BORDER_CONSTANT,cv::Scalar(0));
         }
     }
     else {
         //直接补边到目标大小
-        cv::copyMakeBorder(img, img, 0, inputH - img.rows, 0, inputW - img.cols, cv::BORDER_CONSTANT,cv::Scalar(0));
+        cv::copyMakeBorder(img, resize, 0, inputH - img.rows, 0, inputW - img.cols, cv::BORDER_CONSTANT,cv::Scalar(0));
     }
 
     //to float
-    img.convertTo(img, CV_32FC3);
+    resize.convertTo(resize, CV_32FC3);
 
     //rgb
-    cvtColor(img, img, CV_BGR2RGB);
+    cvtColor(resize, resize, CV_BGR2RGB);
 
     vector<Mat> input_channels;
-    float* input_data = (float *)cpuBuffers;
+    float* input_data = cpuBuffers;
 
     for (int i = 0; i < trtNet->getChannel(); ++i) {
         Mat channel(inputH, inputW, CV_32FC1, input_data);
@@ -636,23 +641,23 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     /* This operation will write the separate BGR planes directly to the
     * input layer of the network because it is wrapped by the Mat
     * objects in input_channels. */
-    split(img, input_channels);
+    split(resize, input_channels);
 
     float *inputData = (float*)trtNet->getBuffer(0);
     cudaMemcpy(inputData, cpuBuffers, inputW * inputH * 3 * sizeof(float), cudaMemcpyHostToDevice);
 #endif
 
-    pre = (double)getTickCount() - pre;
-    std::cout << "pre compute time :" << pre*1000.0 / cv::getTickFrequency() << " ms \n";
+    //pre = (double)getTickCount() - pre;
+    //std::cout << "pre compute time :" << pre*1000.0 / cv::getTickFrequency() << " ms \n";
 
     //LOG(INFO) << "Start net_->Forward()";
-    double t1 = (double)getTickCount();
+    //double t1 = (double)getTickCount();
     trtNet->doInference(1);
-    t1 = (double)getTickCount() - t1;
-    std::cout << "doInference compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
+    //t1 = (double)getTickCount() - t1;
+    //std::cout << "doInference compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
     //LOG(INFO) << "Done net_->Forward()";
 
-    double post = (double)getTickCount();
+    //double post = (double)getTickCount();
     string name_bbox = "face_rpn_bbox_pred_";
     string name_score ="face_rpn_cls_prob_reshape_";
     string name_landmark ="face_rpn_landmark_pred_";
@@ -720,22 +725,24 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
     //排序nms
     faceInfo = nms(faceInfo, nms_threshold);
 
-    post = (double)getTickCount() - post;
-    std::cout << "post compute time :" << post*1000.0 / cv::getTickFrequency() << " ms \n";
-
+    //post = (double)getTickCount() - post;
+    //std::cout << "post compute time :" << post*1000.0 / cv::getTickFrequency() << " ms \n";
+//    cv::Mat src = img.clone();
 //    for(size_t i = 0; i < faceInfo.size(); i++) {
 //        cv::Rect rect = cv::Rect(cv::Point2f(faceInfo[i].rect.x1 * scale, faceInfo[i].rect.y1 * scale),
 //                                 cv::Point2f(faceInfo[i].rect.x2 * scale, faceInfo[i].rect.y2 * scale));
-//        cv::rectangle(img, rect, Scalar(0, 0, 255), 2);
+
+//        cv::rectangle(src, rect, Scalar(0, 0, 255), 2);
 
 //        for(size_t j = 0; j < 5; j++) {
 //            cv::Point2f pt = cv::Point2f(faceInfo[i].pts.x[j] * scale, faceInfo[i].pts.y[j] * scale);
-//            cv::circle(img, pt, 1, Scalar(0, 255, 0), 2);
+//            cv::circle(src, pt, 1, Scalar(0, 255, 0), 2);
 //        }
 //    }
 
-//    imshow("dst", img);
-//    imwrite("trt_result.jpg", img);
+//    //如果使用这张图片显示循环画框会出现问题，需clone()到另一张图显示
+//    imshow("dst", src);
+//    //imwrite("trt_result.jpg", img);
 //    waitKey(0);
 }
 
@@ -760,6 +767,8 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
         _gpu_data8u.width = imgs[i].cols;
         _gpu_data8u.height = imgs[i].rows;
 
+        //注：输入图片大小不一样，使用统一buffer会引入脏数据，所以每次置０
+        cudaMemset(_resize_gpu_data8u.data, 0, inputW * inputH * 3);
         cv::Rect roi = cv::Rect(0, 0, _gpu_data8u.width, _gpu_data8u.height);
         imageROIResize8U3C(_gpu_data8u.data, _gpu_data8u.width, _gpu_data8u.height,
                            roi, _resize_gpu_data8u.data, inputW, inputH);
@@ -825,13 +834,13 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
     cudaMemcpy(inputData, cpuBuffers, imgs.size() * inputW * inputH * 3 * sizeof(float), cudaMemcpyHostToDevice);
 #endif
     t2 = (double)getTickCount() - t2;
-    std::cout << "pre process compute time :" << t2*1000.0 / cv::getTickFrequency() << " ms \n";
+    //std::cout << "pre process compute time :" << t2*1000.0 / cv::getTickFrequency() << " ms \n";
 
     //LOG(INFO) << "Start net_->Forward()";
     double t1 = (double)getTickCount();
     trtNet->doInference(imgs.size());
     t1 = (double)getTickCount() - t1;
-    std::cout << "doInference compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
+    //std::cout << "doInference compute time :" << t1*1000.0 / cv::getTickFrequency() << " ms \n";
     //LOG(INFO) << "Done net_->Forward()";
 
     double post = (double)getTickCount();
@@ -909,15 +918,15 @@ void RetinaFace::detectBatchImages(vector<cv::Mat> imgs, float threshold)
     }
 
     post = (double)getTickCount() - post;
-    std::cout << "post compute time :" << post*1000.0 / cv::getTickFrequency() << " ms \n";
+    //std::cout << "post compute time :" << post*1000.0 / cv::getTickFrequency() << " ms \n";
 //    for(size_t batch = 0; batch < imgs.size(); batch++){
 //        for(size_t i = 0; i < faceInfos[batch].size(); i++) {
-//            cv::Rect rect = cv::Rect(cv::Point2f(faceInfos[batch][i].rect.x1 * scales[batch], faceInfos[batch][i].rect.y1 * scales[batch]),
-//                                     cv::Point2f(faceInfos[batch][i].rect.x2 * scales[batch], faceInfos[batch][i].rect.y2 * scales[batch]));
+//            cv::Rect rect = cv::Rect(cv::Point2f(faceInfos[batch][i].rect.x1, faceInfos[batch][i].rect.y1),
+//                                     cv::Point2f(faceInfos[batch][i].rect.x2, faceInfos[batch][i].rect.y2));
 //            cv::rectangle(imgs[batch], rect, Scalar(0, 0, 255), 2);
 
 //            for(size_t j = 0; j < 5; j++) {
-//                cv::Point2f pt = cv::Point2f(faceInfos[batch][i].pts.x[j] * scales[batch], faceInfos[batch][i].pts.y[j] * scales[batch]);
+//                cv::Point2f pt = cv::Point2f(faceInfos[batch][i].pts.x[j], faceInfos[batch][i].pts.y[j]);
 //                cv::circle(imgs[batch], pt, 1, Scalar(0, 255, 0), 2);
 //            }
 //        }
@@ -1022,6 +1031,9 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
         std::cout << "s1 compute time :" << s1*1000.0 / cv::getTickFrequency() << " ms \n";
 ///////////////////////////////////////////////
 
+        //存储顺序 h * w * num_anchor
+        vector<anchor_box> anchors = anchors_plane(height, width, stride, _anchors_fpn[key]);
+
         for(size_t num = 0; num < num_anchor; num++) {
             for(size_t j = 0; j < count; j++) {
                 //置信度小于阈值跳过
@@ -1037,8 +1049,6 @@ void RetinaFace::detect(Mat img, float threshold, float scales)
                 float dh = bbox_delta[j + count * (3 + num * 4)];
                 regress = cv::Vec4f(dx, dy, dw, dh);
 
-                //存储顺序 h * w * num_anchor
-                vector<anchor_box> anchors = anchors_plane(height, width, stride, _anchors_fpn[key]);
                 //回归人脸框
                 anchor_box rect = bbox_pred(anchors[j + count * num], regress);
                 //越界处理

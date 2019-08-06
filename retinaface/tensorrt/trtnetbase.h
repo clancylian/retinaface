@@ -16,6 +16,35 @@ using namespace std;
 class Logger;
 class Profiler;
 
+#ifdef USE_TENSORRT_INT8
+class Int8EntropyCalibrator2 : public nvinfer1::IInt8EntropyCalibrator2
+{
+public:
+
+    Int8EntropyCalibrator2();
+
+    virtual ~Int8EntropyCalibrator2();
+
+    //未定义，创建校准表时使用
+    int getBatchSize() const override {return 0;}
+
+    //未定义，创建校准表时使用
+    bool getBatch(void* bindings[], const char* names[], int nbBindings) override {return false;}
+
+    //检验校准表是否存在
+    bool checkCalibrationTable();
+
+    const void* readCalibrationCache(size_t& length) override;
+
+    virtual void writeCalibrationCache(const void* cache, size_t length) override;
+
+private:
+    std::string calibrationTableName;
+    bool mReadCache{true};
+    std::vector<char> mCalibrationCache;
+};
+#endif // USE_TENSORRT_INT8
+
 class TrtNetBase
 {
 public:

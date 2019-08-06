@@ -1,8 +1,55 @@
 ﻿#include "trtnetbase.h"
 #include "trtutility.h"
 #include <assert.h>
+#include <iterator>
+#include <memory>
 
 using namespace std;
+
+#ifdef USE_TENSORRT_INT8
+Int8EntropyCalibrator2::Int8EntropyCalibrator2()
+{
+    mReadCache = true;
+    calibrationTableName = std::string("../model/mnet-deconv-0517.table.int8");
+}
+
+Int8EntropyCalibrator2::~Int8EntropyCalibrator2()
+{
+
+}
+
+bool Int8EntropyCalibrator2::checkCalibrationTable()
+{
+    std::ifstream input(calibrationTableName, std::ios::binary);
+    if(!input.good()){
+        return false;
+    }
+    input.close();
+    return true;
+}
+
+const void* Int8EntropyCalibrator2::readCalibrationCache(size_t& length)
+{
+    mCalibrationCache.clear();
+    std::ifstream input(calibrationTableName, std::ios::binary);
+
+    input >> std::noskipws;
+    if (mReadCache && input.good()){
+        std::copy(std::istream_iterator<char>(input), std::istream_iterator<char>(), std::back_inserter(mCalibrationCache));
+    }
+    length = mCalibrationCache.size();
+    input.close();
+
+    return length ? &mCalibrationCache[0] : nullptr;
+}
+
+void Int8EntropyCalibrator2::writeCalibrationCache(const void* cache, size_t length)
+{
+    std::ofstream output(calibrationTableName, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(cache), length);
+    output.close();
+}
+#endif // USE_TENSORRT_INT8
 
 //This function is used to trim space
 string TrtNetBase::stringtrim(string s)
@@ -245,13 +292,31 @@ void TrtNetBase::caffeToTRTModel(const std::string& deployFile, const std::strin
     //builder->setMinFindIterations(3);
     //builder->setAverageFindIterations(2);
 
-    // set up the network for paired-fp16 format if available
-    if(useFp16) {
-        builder->setHalf2Mode(true);
+#ifdef USE_TENSORRT_INT8
+    // Calibrator life time needs to last until after the engine is built.
+    std::unique_ptr<IInt8Calibrator> calibrator;
+    Int8EntropyCalibrator2 *entropycalibrator = new Int8EntropyCalibrator2();
+    if(entropycalibrator->checkCalibrationTable()){
+        std::cout << "Using Entropy Calibrator 2." << std::endl;
+        calibrator.reset(entropycalibrator);
+        builder->setInt8Mode(true);
+        builder->setInt8Calibrator(calibrator.get());
+    }else{
+        // set up the network for paired-fp16 format if available
+        if(useFp16) {
+            builder->setHalf2Mode(true);
+        }
+        std::cout << "Can not open CalibrationTable, Use fp32 infer mode." << std::endl;
     }
+#endif // USE_TENSORRT_INT8
 
     ICudaEngine* engine = builder->buildCudaEngine(*network);
     assert(engine);
+
+#ifdef USE_TENSORRT_INT8
+    // Once the engine is built. Its safe to destroy the calibrator.
+    calibrator.reset();//entropycalibrator will be released here
+#endif // USE_TENSORRT_INT8
 
     // we don't need the network any more, and we can destroy the parser
     network->destroy();

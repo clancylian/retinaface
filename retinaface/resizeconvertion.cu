@@ -1,19 +1,3 @@
-﻿/**
- * @file       resizeconvertion.cu
- * @brief      CUDA核函数
- * @details    CUDA版本图像处理
- * @author     panda1234lee@126.com
- * @date       2018.01.26
- * @version    V0.2
- * @par Copyright (C):
- *			   罗普特(厦门)科技集团有限公司
- * @par History:
- *  - V0.2     clancy.lian@gmail.com        2018.01.26 \n
- *             整合到一个文件统一管理 \n
- *  - V0.1     clancy.lian@gmail.com        2017.11.28 \n
- *             原型开发 \n
- */
-
 #include <cuda_runtime.h>
 #include <npp.h>
 #include <opencv2/opencv.hpp>
@@ -73,8 +57,8 @@ __global__ void convertBGR2RGBfloatKernel(uchar3 *src, float3 *dst, int width, i
 
 void convertBGR2RGBfloat(void *src, void *dst, int width, int height, cudaStream_t stream)
 {
-    dim3 grids((width + 31) / 32, (height + 31) / 32);
-    dim3 blocks(32, 32);
+    dim3 grids((width + 31) / 32, (height + 7) / 8);
+    dim3 blocks(32, 8);
     convertBGR2RGBfloatKernel<<<grids, blocks>>>((uchar3 *)src, (float3 *)dst, width, height);
 }
 
@@ -195,8 +179,8 @@ __global__ void imageSplitKernel(float3 *ptr, float *dst, int width, int height)
 
 void imageSplit(const void *src, float *dst, int width, int height, cudaStream_t stream)
 {
-    dim3 grids((width + 31) / 32, (height + 31) / 32);
-    dim3 blocks(32, 32);
+    dim3 grids((width + 31) / 32, (height + 7) / 8);
+    dim3 blocks(32, 8);
     imageSplitKernel<<<grids, blocks>>>((float3 *)src, (float *)dst, width, height);
 }
 

@@ -11,12 +11,13 @@
 原模型来源大佬提供模型：[mobilenet25](https://pan.baidu.com/s/1P1ypO7VYUbNAezdvLm2m9w#list/path=%2F)，后续自己重训练。
 
 ## Demo
-```bash
+```
 $ mkdir build
 $ cd build/
 $ cmake
 $ make
 ```
+需要修改cmakelist里面的依赖库路径等。
 
 ## 速度
 
@@ -88,6 +89,9 @@ trt批量处理测试：
 
 注：最大批量数设置越大，速度越慢。以上统计时间三个阶段都是计算一次结果，总时间是累计1000次平均结果，所以以总时间为准。
 
+
+### INT8推理
+INT8校准表生成可以使用工具INT8-Calibration-Tool，批量需要使用batch下加速才比较明显。
 
 ## 精度
 

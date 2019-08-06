@@ -1,24 +1,28 @@
 TEMPLATE = app
 CONFIG += console c++11
 CONFIG -= app_bundle
-CONFIG -= qt
-
-DEFINES += USE_TENSORRT USE_NPP #USE_TENSORRT_INT8
-
-SOURCES += main.cpp \
-    RetinaFace.cpp \
-    tensorrt/trtnetbase.cpp \
-    tensorrt/trtretinafacenet.cpp
+QT += core
+QT -= gui
 
 HEADERS += \
-    RetinaFace.h \
-    tensorrt/trtnetbase.h \
-    tensorrt/trtutility.h \
-    tensorrt/trtretinafacenet.h \
-    timer.h
+    calibrationtable.h \
+    common/aescrypto.h \
+    common/helpercuda.h \
+    common/logger.h \
+    common/logging.h \
+    CalibrationTableImpl.h
+
+SOURCES += \
+    calibrationtable.cpp \
+    common/aescrypto.cpp \
+    common/logger.cpp \
+    CalibrationTableImpl.cpp \
+    main.cpp
 
 CUDA_SOURCES += \
-    resizeconvertion.cu
+    common/calcprelu.cu
+
+INCLUDEPATH += ./common/
 
 LIBS += -L/usr/local/lib -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_videoio -lopencv_imgcodecs
 
@@ -27,13 +31,13 @@ INCLUDEPATH += /home/ubuntu/caffe-office/caffe/include
 LIBS += -lprotobuf -L/home/ubuntu/caffe-office/caffe/build/lib -lcaffe
 
 # 3rd party
-LIBS += -lglog -lboost_system
+LIBS += -lglog -lboost_system -lssl -lcrypto
 
 INCLUDEPATH += /usr/local/TensorRT/include
 LIBS += -L/usr/local/TensorRT/lib -lnvinfer -lnvcaffe_parser\
 
 unix {
-    CUDA_DIR = /usr/local/cuda-10.1
+    CUDA_DIR = /usr/local/cuda
     SYSTEM_TYPE = 64            #操作系统位数 '32' or '64',
     CUDA_ARCH = sm_61         # cuda架构, for example 'compute_10', 'compute_11', 'sm_10'
     NVCC_OPTIONS = -lineinfo -Xcompiler -fPIC

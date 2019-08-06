@@ -1,0 +1,211 @@
+TRT-5102-EntropyCalibration2
+data: 4000890a
+mobilenet0_conv0_fwd: 4138dc39
+(Unnamed Layer* 1) [Scale]_output: 3da77f4a
+mobilenet0_batchnorm0_fwd: 3c68abb1
+mobilenet0_relu0_fwd: 3c68abb1
+mobilenet0_conv1_fwd: 3c93e8e1
+(Unnamed Layer* 5) [Scale]_output: 3dcb6b0f
+mobilenet0_batchnorm1_fwd: 3c8af4d6
+mobilenet0_relu1_fwd: 3c8af4d6
+mobilenet0_conv2_fwd: 3c15cbef
+(Unnamed Layer* 9) [Scale]_output: 3dcb84ff
+mobilenet0_batchnorm2_fwd: 3c310f4c
+mobilenet0_relu2_fwd: 3c2fb933
+mobilenet0_conv3_fwd: 3ba38bfe
+(Unnamed Layer* 13) [Scale]_output: 3db7ec80
+mobilenet0_batchnorm3_fwd: 3c995f56
+mobilenet0_relu3_fwd: 3c995f56
+mobilenet0_conv4_fwd: 3c40dd9d
+(Unnamed Layer* 17) [Scale]_output: 3de13b6e
+mobilenet0_batchnorm4_fwd: 3ca42f64
+mobilenet0_relu4_fwd: 3ca3eb6f
+mobilenet0_conv5_fwd: 3bdd793e
+(Unnamed Layer* 21) [Scale]_output: 3dcecf88
+mobilenet0_batchnorm5_fwd: 3cb87291
+mobilenet0_relu5_fwd: 3c8f17cb
+mobilenet0_conv6_fwd: 3c830cf7
+(Unnamed Layer* 25) [Scale]_output: 3da64ab5
+mobilenet0_batchnorm6_fwd: 3cc35063
+mobilenet0_relu6_fwd: 3c785455
+mobilenet0_conv7_fwd: 3be39dd1
+(Unnamed Layer* 29) [Scale]_output: 3db0775f
+mobilenet0_batchnorm7_fwd: 3bcb67be
+mobilenet0_relu7_fwd: 3bcb1348
+mobilenet0_conv8_fwd: 3c2d1850
+(Unnamed Layer* 33) [Scale]_output: 3dac1168
+mobilenet0_batchnorm8_fwd: 3c198d4c
+mobilenet0_relu8_fwd: 3bed3f3c
+mobilenet0_conv9_fwd: 3b434f77
+(Unnamed Layer* 37) [Scale]_output: 3d93b04b
+mobilenet0_batchnorm9_fwd: 3c8ae2bc
+mobilenet0_relu9_fwd: 3c4c19c2
+mobilenet0_conv10_fwd: 3bd6ac61
+(Unnamed Layer* 41) [Scale]_output: 3d812342
+mobilenet0_batchnorm10_fwd: 3c1aef84
+mobilenet0_relu10_fwd: 3c1e3e55
+mobilenet0_conv11_fwd: 3b7da97a
+(Unnamed Layer* 45) [Scale]_output: 3d964684
+mobilenet0_batchnorm11_fwd: 3c0b8255
+mobilenet0_relu11_fwd: 3bd6edbf
+mobilenet0_conv12_fwd: 3bb7af57
+(Unnamed Layer* 49) [Scale]_output: 3d44d123
+mobilenet0_batchnorm12_fwd: 3bce5f79
+mobilenet0_relu12_fwd: 3bce5f79
+mobilenet0_conv13_fwd: 3b10834e
+(Unnamed Layer* 53) [Scale]_output: 3d5b5dd6
+mobilenet0_batchnorm13_fwd: 3c25cffd
+mobilenet0_relu13_fwd: 3c0fbb92
+mobilenet0_conv14_fwd: 3bcd10d4
+(Unnamed Layer* 57) [Scale]_output: 3d645aea
+mobilenet0_batchnorm14_fwd: 3bfa2402
+mobilenet0_relu14_fwd: 3bde05cd
+mobilenet0_conv15_fwd: 3ae31601
+(Unnamed Layer* 61) [Scale]_output: 3da5ed6f
+mobilenet0_batchnorm15_fwd: 3bfdae30
+mobilenet0_relu15_fwd: 3c0e1436
+mobilenet0_conv16_fwd: 3bc1ae62
+(Unnamed Layer* 65) [Scale]_output: 3d53f5ef
+mobilenet0_batchnorm16_fwd: 3bfebe01
+mobilenet0_relu16_fwd: 3be9575c
+mobilenet0_conv17_fwd: 3ad68cbf
+(Unnamed Layer* 69) [Scale]_output: 3d91fb77
+mobilenet0_batchnorm17_fwd: 3c106e29
+mobilenet0_relu17_fwd: 3c1f6427
+mobilenet0_conv18_fwd: 3bcb4cdd
+(Unnamed Layer* 73) [Scale]_output: 3d838ec4
+mobilenet0_batchnorm18_fwd: 3c046e14
+mobilenet0_relu18_fwd: 3c0aa148
+mobilenet0_conv19_fwd: 3b07dbf2
+(Unnamed Layer* 77) [Scale]_output: 3d8b9d7c
+mobilenet0_batchnorm19_fwd: 3c5546f1
+mobilenet0_relu19_fwd: 3c5489b1
+mobilenet0_conv20_fwd: 3bec2ee3
+(Unnamed Layer* 81) [Scale]_output: 3d9c27fb
+mobilenet0_batchnorm20_fwd: 3c0ccab3
+mobilenet0_relu20_fwd: 3c147d36
+mobilenet0_conv21_fwd: 3adda2f4
+(Unnamed Layer* 85) [Scale]_output: 3db47089
+mobilenet0_batchnorm21_fwd: 3c0768e7
+mobilenet0_relu21_fwd: 3c5e0c3b
+mobilenet0_conv22_fwd: 3bde068e
+(Unnamed Layer* 89) [Scale]_output: 3da450cb
+mobilenet0_batchnorm22_fwd: 3c27d77d
+mobilenet0_relu22_fwd: 3c208fa5
+mobilenet0_conv23_fwd: 3af5e766
+(Unnamed Layer* 93) [Scale]_output: 3db602f4
+mobilenet0_batchnorm23_fwd: 3c31ef3d
+mobilenet0_relu23_fwd: 3c3e4c95
+mobilenet0_conv24_fwd: 3bd1748b
+(Unnamed Layer* 97) [Scale]_output: 3dab755f
+mobilenet0_batchnorm24_fwd: 3c109208
+mobilenet0_relu24_fwd: 3c2ce573
+mobilenet0_conv25_fwd: 3a905d6f
+(Unnamed Layer* 101) [Scale]_output: 3dcf2a61
+mobilenet0_batchnorm25_fwd: 3c10413d
+mobilenet0_relu25_fwd: 3c444545
+mobilenet0_conv26_fwd: 3b8a49b7
+(Unnamed Layer* 105) [Scale]_output: 3d912b51
+mobilenet0_batchnorm26_fwd: 3d8600b2
+mobilenet0_relu26_fwd: 3d7b6a42
+rf_c3_lateral: 3d00804f
+(Unnamed Layer* 109) [Scale]_output: 3d5cd65d
+rf_c3_lateral_bn: 3c9087ec
+rf_c3_lateral_relu: 3c916eab
+rf_c3_det_conv1: 3ca67b7d
+(Unnamed Layer* 113) [Scale]_output: 3d808eb2
+rf_c3_det_conv1_bn: 3cbdad90
+rf_c3_det_context_conv1: 3c9921fa
+(Unnamed Layer* 116) [Scale]_output: 3d574410
+rf_c3_det_context_conv1_bn: 3c863291
+rf_c3_det_context_conv1_relu: 3c84d87d
+rf_c3_det_context_conv2: 3c654cf2
+(Unnamed Layer* 120) [Scale]_output: 3d71d752
+rf_c3_det_context_conv2_bn: 3cbdad90
+rf_c3_det_context_conv3_1: 3c1e2545
+(Unnamed Layer* 123) [Scale]_output: 3d5102c9
+rf_c3_det_context_conv3_1_bn: 3c989360
+rf_c3_det_context_conv3_1_relu: 3cb0f6f5
+rf_c3_det_context_conv3_2: 3cabc94e
+(Unnamed Layer* 127) [Scale]_output: 3d5c543c
+rf_c3_det_context_conv3_2_bn: 3cbdad90
+rf_c3_det_concat: 3cbdad90
+rf_c3_det_concat_relu: 3cb24989
+face_rpn_cls_score_stride32: 3d6647e2
+face_rpn_cls_score_reshape_stride32: 3d6647e2
+face_rpn_cls_prob_stride32: 3c02f3d5
+face_rpn_cls_prob_reshape_stride32: 3c02f3d5
+face_rpn_bbox_pred_stride32: 3bab09e3
+face_rpn_landmark_pred_stride32: 3bc1e8f8
+rf_c2_lateral: 3b5dc6b5
+(Unnamed Layer* 138) [Scale]_output: 3dae426a
+rf_c2_lateral_bn: 3cf1c0d1
+rf_c2_lateral_relu: 3cf1fd94
+rf_c3_upsampling: 3c4fb254
+crop0: 3c4fb254
+_plus0: 3cc1382d
+rf_c2_aggr: 3c8e7f2e
+(Unnamed Layer* 145) [Scale]_output: 3d8c2404
+rf_c2_aggr_bn: 3cadfff1
+rf_c2_aggr_relu: 3ca520d5
+rf_c2_det_conv1: 3c97bab5
+(Unnamed Layer* 149) [Scale]_output: 3d7fc80d
+rf_c2_det_conv1_bn: 3cfabbbb
+rf_c2_det_context_conv1: 3c53a951
+(Unnamed Layer* 152) [Scale]_output: 3d9513b8
+rf_c2_det_context_conv1_bn: 3cd8a670
+rf_c2_det_context_conv1_relu: 3cdab3d1
+rf_c2_det_context_conv2: 3ccb1923
+(Unnamed Layer* 156) [Scale]_output: 3da45d87
+rf_c2_det_context_conv2_bn: 3cfabbbb
+rf_c2_det_context_conv3_1: 3c8d04ab
+(Unnamed Layer* 159) [Scale]_output: 3d9c82ea
+rf_c2_det_context_conv3_1_bn: 3cc8d156
+rf_c2_det_context_conv3_1_relu: 3cc8d156
+rf_c2_det_context_conv3_2: 3c6cadb0
+(Unnamed Layer* 163) [Scale]_output: 3d9cec7b
+rf_c2_det_context_conv3_2_bn: 3cfabbbb
+rf_c2_det_concat: 3cfabbbb
+rf_c2_det_concat_relu: 3cd470b5
+face_rpn_cls_score_stride16: 3d32abd1
+face_rpn_cls_score_reshape_stride16: 3d32abd1
+face_rpn_cls_prob_stride16: 3c02f3f3
+face_rpn_cls_prob_reshape_stride16: 3c02f3f3
+face_rpn_bbox_pred_stride16: 3b93494f
+face_rpn_landmark_pred_stride16: 3be402e0
+rf_c1_red_conv: 3b3471d5
+(Unnamed Layer* 174) [Scale]_output: 3d661b88
+rf_c1_red_conv_bn: 3ca90217
+rf_c1_red_conv_relu: 3c9f02a2
+rf_c2_upsampling: 3c686ee1
+crop1: 3c686ee1
+_plus1: 3c891ac5
+rf_c1_aggr: 3c2cdde5
+(Unnamed Layer* 181) [Scale]_output: 3d688d59
+rf_c1_aggr_bn: 3ca31772
+rf_c1_aggr_relu: 3c871a1e
+rf_c1_det_conv1: 3c030735
+(Unnamed Layer* 185) [Scale]_output: 3d426413
+rf_c1_det_conv1_bn: 3cd3f9b2
+rf_c1_det_context_conv1: 3c118e93
+(Unnamed Layer* 188) [Scale]_output: 3d8012c7
+rf_c1_det_context_conv1_bn: 3ca0f9db
+rf_c1_det_context_conv1_relu: 3ca0764c
+rf_c1_det_context_conv2: 3bf5d598
+(Unnamed Layer* 192) [Scale]_output: 3d9fa1bc
+rf_c1_det_context_conv2_bn: 3cd3f9b2
+rf_c1_det_context_conv3_1: 3bdcb0cc
+(Unnamed Layer* 195) [Scale]_output: 3d7247ae
+rf_c1_det_context_conv3_1_bn: 3c9ea099
+rf_c1_det_context_conv3_1_relu: 3c7c3b05
+rf_c1_det_context_conv3_2: 3c0492c6
+(Unnamed Layer* 199) [Scale]_output: 3d6ac57d
+rf_c1_det_context_conv3_2_bn: 3cd3f9b2
+rf_c1_det_concat: 3cd3f9b2
+rf_c1_det_concat_relu: 3ca5102e
+face_rpn_cls_score_stride8: 3d1f9982
+face_rpn_cls_score_reshape_stride8: 3d1f9982
+face_rpn_cls_prob_stride8: 3c01cecb
+face_rpn_cls_prob_reshape_stride8: 3c01cecb
+face_rpn_bbox_pred_stride8: 3b82d139
+face_rpn_landmark_pred_stride8: 3bd6338d
