@@ -74,8 +74,6 @@ use nvidia npp library to speed up preprocess：
 |    16     |  448x448  |      32      |      2.2ms      |   14ms    |      1.3ms       | 16.7ms | 80%  |
 |    32     |  448x448  |      32      |      5.0ms      |   22ms    |      2.8ms       | 29.3ms | 77%  |
 
-注：最大批量数设置越大，速度越慢。以上统计时间三个阶段都是计算一次结果，总时间是累计1000次平均结果，所以以总时间为准。
-
 
 ### INT8 inference
 INT8 calibration table can generate by [INT8-Calibration-Tool](https://github.com/clancylian/retinaface/tree/master/INT8-Calibration-Tool).
