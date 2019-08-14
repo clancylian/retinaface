@@ -1,4 +1,4 @@
-## 编译
+## compile
 ```
 $ mkdir build
 $ cd build
@@ -6,7 +6,7 @@ $ cmake ../
 $ make
 ```
 
-### 写一个通用的校准基类，后续子类只需实现预处理方法。
+### I have write a base class to do calibrate, you can derived from it.
 
 ```c++
 class CalibrationTableRetinaFace : public CalibrationTableBase
@@ -55,7 +55,7 @@ cv::Mat CalibrationTableRetinaFace::preprocess(cv::Mat img)
 
 
 
-###  设置模型路径，网络宽高，输出等参数。
+###  you need to set model path and input size and output and so on.
 
 ```c++
 int main(int argc, char** argv)
