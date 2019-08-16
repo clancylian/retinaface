@@ -78,5 +78,7 @@ use nvidia npp library to speed up preprocess：
 ### INT8 inference
 INT8 calibration table can generate by [INT8-Calibration-Tool](https://github.com/clancylian/retinaface/tree/master/INT8-Calibration-Tool).
 
+### Accuracy
 
+![https://raw.githubusercontent.com/clancylian/retinaface/master/data/retinaface-widerface%E6%B5%8B%E8%AF%95.png](https://raw.githubusercontent.com/clancylian/retinaface/master/data/retinaface-widerface%E6%B5%8B%E8%AF%95.png)
 
