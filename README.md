@@ -6,7 +6,7 @@
 ## model transformation tool
 [MXNet2Caffe](https://github.com/cypw/MXNet2Caffe)
 
-you need to add some layers yourself, and in caffe there is not **upsmaple**,you can replace with **deconvition**,and maybe slight accuracy loss.
+you need to add some layers yourself, and in caffe there is not **upsample**,you can replace with **deconvolution**,and maybe slight accuracy loss.
 
 the origin model reference from [mobilenet25](https://pan.baidu.com/s/1P1ypO7VYUbNAezdvLm2m9w#list/path=%2F)，and I have retrain it.
 
